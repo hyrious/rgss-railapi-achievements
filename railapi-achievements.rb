@@ -196,13 +196,12 @@ module RailAPI
       factory = CSharp.RailFactory
       return if (@failed = factory.null?)
       @helper = factory.IRailFactory_RailAchievementHelper
-      return factory.delete_IRailFactory if (@failed = @helper.null?)
+      return if (@failed = @helper.null?)
       current_user = [0].pack('L')
       @player = @helper.IRailAchievementHelper_CreatePlayerAchievement current_user
-      return factory.delete_IRailFactory if (@failed = @player.null?)
+      return if (@failed = @player.null?)
       result = @player.IRailPlayerAchievement_AsyncRequestAchievement ''
       @failed = !result.success?
-      factory.delete_IRailFactory
       @phase = :pending
     end
 
