@@ -48,7 +48,8 @@ module RailAPI
           next 'p' if e.respond_to?(:to_str)
           raise ArgumentError, "can not determine import type of #{e.inspect}"
         }
-        Win32API.new DllFile, "CSharp_#{func}", imports, 'L'
+        _suffix = "@#{imports.size * 4}"
+        Win32API.new DllFile, "_CSharp_#{func}#{_suffix}", imports, 'L'
       end if !Cache[func] || NOCACHE[func]
       Wrapper.new Cache[func].call(*args)
     end
@@ -258,8 +259,10 @@ class << RailAPI
 
   def init_player_achievement
     self.achievement = RailAPI::Achievement.new
-    context.on(2101) { |e| achievement.received e }
-    context.on(2102) { |e| achievement.stored e }
+    if context
+      context.on(2101) { |e| achievement.received e }
+      context.on(2102) { |e| achievement.stored e }
+    end
   end
 end
 
