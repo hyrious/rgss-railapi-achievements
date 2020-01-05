@@ -10,9 +10,9 @@ module RailAPI
     # 游戏 ID
     GameID = 2001102
     # dll 文件名
-    DllFile = 'rail_api.dll'
+    DllFile = 'System/rail_api.dll'
     # wrapper dll 文件名
-    WrapperDllFile = 'rail_wrapper.dll'
+    WrapperDllFile = 'System/rail_wrapper.dll'
     # 本地 Debug 模式 (在不使用 wegame 启动的情况下设置为 true)
     # 即从 RM 直接启动的情况，注意仍需登录 wegame 客户端才能使用
     # 使用 wegame 启动时请将此选项设为 false
