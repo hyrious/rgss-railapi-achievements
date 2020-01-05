@@ -19,11 +19,11 @@ module RailAPI
     LocalDebug = true
   end
   # 调用方式: 事件 -> 脚本
-  #   RailAPI.achievement.has "成就名"        #=> true/false 查询是否获得成就
-  #   # 以下方法异步生效，一般直接返回 true
-  #   # 若返回 false，可能是网络问题导致未能发送成功
+  #   RailAPI.achievement.has? "成就名"       #=> true/false 查询是否获得成就
+  #   以下方法异步生效，一般直接返回 true
+  #   若返回 false，可能是网络问题导致未能发送成功
   #   RailAPI.achievement.make "成就名"       # 达成成就
-  #   RailAPI.achievement.make "成就名", 3, 5 # 达成进度形式的成就
+  #   RailAPI.achievement.make "成就名", 3, 5 # 达成进度形式的成就 (3/5)
   #   RailAPI.achievement.cancel "成就名"     # 清除成就
 end
 # ------------------------------
