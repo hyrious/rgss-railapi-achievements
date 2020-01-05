@@ -5,8 +5,4 @@
 
 ## 使用方法
 
-参见 [railapi-achievements.rb](railapi-achievements.rb)
-
-### 其他
-
-关于翻译 Rail API 的细节可以参考 [笔记: 从 C++ 到 RGSS](guide-translate-cpp-to-rgss.md)
+运行 railapi/make.cmd 得到 rail_wrapper.dll，然后参见 [railapi-achievements.rb](railapi-achievements.rb)

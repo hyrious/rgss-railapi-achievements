@@ -1,0 +1,9 @@
+EXPORTS
+init = ?init@@YG_NPBDH_N@Z
+term
+has
+update
+make = ?make@@YG_NPBD@Z
+progress
+ready
+cancel
