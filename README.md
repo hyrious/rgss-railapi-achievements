@@ -5,7 +5,7 @@
 ## 使用方法
 
 运行 railapi/make.cmd 得到 rail_wrapper.dll
-(或者从 [release](releases) 里拿一份)
+(或者从 [release](https://github.com/hyrious/rgss-railapi-achievements/releases) 里拿一份)
 
 然后参见 [railapi-achievements.rb](railapi-achievements.rb)
 
