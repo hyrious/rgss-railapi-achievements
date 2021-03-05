@@ -49,18 +49,39 @@ module RailAPI
 
   class Context
     include Config
-  
+
     def initialize
       @dll = Dll.new(WrapperDllFile)
-      unless b @dll.init(DllFile, GameID, (LocalDebug ? 1 : 0))
+      unless b @dll.init(DllFile, GameID, (LocalDebug ? 1 : 0), ($RGD ? 0 : 1))
         puts '[RailAPI] 初始化失败'
       else
         puts '[RailAPI] 初始化成功'
       end
     end
 
+    def ptr2str pointer
+      kernel32 = Dll.new('kernel32')
+      len = kernel32.lstrlen(pointer)
+      return '' if len.zero?
+      str = "\0" * len
+      kernel32.RtlMoveMemory(str, pointer, len)
+      return str
+    end
+
     def update
       @dll.update
+      if (ptr = @dll.anti_addiction) != 0
+        if (str = ptr2str ptr).size > 9
+          desc = nil
+          str[str.index('"')..-1].force_encoding('utf-8').scan(/[a-z]":"[^"]+/).each do |e|
+            k, _, s = e.split('"')
+            desc = s if k == 'c'
+          end
+          puts "=== Anti Addiction ==="
+          puts desc
+          puts "--- Anti Addiction ---"
+        end
+      end
     end
 
     def achievement_ready?

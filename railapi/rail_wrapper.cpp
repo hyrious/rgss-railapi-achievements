@@ -3,6 +3,7 @@
 #include "rail/sdk/rail_achievement.h"
 #include "rail/sdk/rail_api.h"
 #include "rail/sdk/rail_event.h"
+#include "rail/sdk/rail_floating_window_define.h"
 #include "rail/sdk/rail_result.h"
 
 HMODULE librail_api;
@@ -14,11 +15,17 @@ class RailAchievement final : public rail::IRailEvent {
     bool playerAchievementReceived = false;
 
    public:
+    char *anti_addiction_json_content = nullptr;
+
     RailAchievement() {
+        auto system = rail::kRailEventSystemStateChanged;
         auto received = rail::kRailEventAchievementPlayerAchievementReceived;
         auto stored = rail::kRailEventAchievementPlayerAchievementStored;
+        auto notify = rail::kRailEventShowFloatingNotifyWindow;
+        invoker->RailRegisterEvent(system, this);
         invoker->RailRegisterEvent(received, this);
         invoker->RailRegisterEvent(stored, this);
+        invoker->RailRegisterEvent(notify, this);
         auto helper = invoker->RailFactory()->RailAchievementHelper();
         player_achievement = helper->CreatePlayerAchievement(self);
         player_achievement->AsyncRequestAchievement("");
@@ -28,6 +35,14 @@ class RailAchievement final : public rail::IRailEvent {
             player_achievement->Release();
             player_achievement = nullptr;
         }
+        auto system = rail::kRailEventSystemStateChanged;
+        auto received = rail::kRailEventAchievementPlayerAchievementReceived;
+        auto stored = rail::kRailEventAchievementPlayerAchievementStored;
+        auto notify = rail::kRailEventShowFloatingNotifyWindow;
+        invoker->RailUnregisterEvent(notify, this);
+        invoker->RailUnregisterEvent(stored, this);
+        invoker->RailUnregisterEvent(received, this);
+        invoker->RailUnregisterEvent(system, this);
     }
     bool IsReady() const { return playerAchievementReceived; }
     bool HasAchieved(LPCSTR name_) const {
@@ -62,11 +77,30 @@ class RailAchievement final : public rail::IRailEvent {
         switch (event_id) {
             case rail::kRailEventAchievementPlayerAchievementReceived: {
                 playerAchievementReceived = true;
+                break;
             }
             case rail::kRailEventAchievementPlayerAchievementStored: {
                 auto event = static_cast<PlayerAchievementStored *>(param);
                 // TODO: callback(event->achievement_name)?
                 (void) event;
+                break;
+            }
+            case rail::kRailEventSystemStateChanged: {
+                auto event = static_cast<RailSystemStateChanged *>(param);
+                if (event->state == rail::kSystemStatePlatformOffline ||
+                    event->state == rail::kSystemStatePlatformExit ||
+                    event->state == rail::kSystemStatePlayerOwnershipExpired ||
+                    event->state == rail::kSystemStateGameExitByAntiAddiction) {
+                    // exit(0);
+                }
+                break;
+            }
+            case rail::kRailEventShowFloatingNotifyWindow: {
+                auto event = static_cast<ShowNotifyWindow *>(param);
+                if (event->window_type == rail::kRailNotifyWindowAntiAddiction) {
+                    anti_addiction_json_content = (char *)event->json_content.c_str();
+                }
+                break;
             }
             default:
                 return;
@@ -76,12 +110,13 @@ class RailAchievement final : public rail::IRailEvent {
 
 RailAchievement *railAchievement = nullptr;
 
-bool __stdcall init(LPCSTR path, int id, bool debug) {
+const char *argv = "";
+const char *debu = "--rail_debug_mode";
+
+bool __stdcall init(LPCSTR path, int id, bool debug, bool no_anti_addiction) {
     librail_api = LoadLibrary(path);
     if (librail_api == nullptr) return false;
     invoker = new rail::helper::Invoker(librail_api);
-    const char *argv = "";
-    const char *debu = "--rail_debug_mode";
     bool ret = false;
     if (debug)
         ret = invoker->RailNeedRestartAppForCheckingEnvironment(id, 1, &debu);
@@ -90,6 +125,9 @@ bool __stdcall init(LPCSTR path, int id, bool debug) {
     if (ret) return false;
     ret = invoker->RailInitialize();
     if (!ret) return false;
+    if (no_anti_addiction) {
+        invoker->RailFactory()->RailFloatingWindow()->SetNotifyWindowEnable(rail::kRailNotifyWindowAntiAddiction, false);
+    }
     railAchievement = new RailAchievement();
     return ret;
 }
@@ -136,4 +174,11 @@ bool __stdcall cancel(LPCSTR name) {
 bool __stdcall progress(LPCSTR name, int cur, int max) {
     if (!railAchievement) return false;
     return railAchievement->Make(name, cur, max);
+}
+
+char *__stdcall anti_addiction() {
+    if (!railAchievement) return nullptr;
+    char *json = railAchievement->anti_addiction_json_content;
+    railAchievement->anti_addiction_json_content = nullptr;
+    return json;
 }

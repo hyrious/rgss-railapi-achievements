@@ -1,5 +1,5 @@
 EXPORTS
-init = ?init@@YG_NPBDH_N@Z
+init = ?init@@YG_NPBDH_N1@Z
 term
 has
 update
@@ -7,3 +7,4 @@ make = ?make@@YG_NPBD@Z
 progress
 ready
 cancel
+anti_addiction
