@@ -11,11 +11,19 @@ rail::helper::Invoker *invoker = nullptr;
 
 class RailAchievement final : public rail::IRailEvent {
     rail::RailID self{ 0 };
+    rail::RailString anti_addiction;
     rail::IRailPlayerAchievement *player_achievement = nullptr;
+    bool antiAddictionReceived = false;
     bool playerAchievementReceived = false;
 
    public:
-    char *anti_addiction_json_content = nullptr;
+    const char *FetchAntiAddiction() {
+        if (antiAddictionReceived) {
+            antiAddictionReceived = false;
+            return anti_addiction.c_str();
+        }
+        return nullptr;
+    }
 
     RailAchievement() {
         auto system = rail::kRailEventSystemStateChanged;
@@ -87,6 +95,7 @@ class RailAchievement final : public rail::IRailEvent {
             }
             case rail::kRailEventSystemStateChanged: {
                 auto event = static_cast<RailSystemStateChanged *>(param);
+                printf("[rail_wrapper] >>> RailSystemStateChanged: %d\n", event->state);
                 if (event->state == rail::kSystemStatePlatformOffline ||
                     event->state == rail::kSystemStatePlatformExit ||
                     event->state == rail::kSystemStatePlayerOwnershipExpired ||
@@ -98,7 +107,8 @@ class RailAchievement final : public rail::IRailEvent {
             case rail::kRailEventShowFloatingNotifyWindow: {
                 auto event = static_cast<ShowNotifyWindow *>(param);
                 if (event->window_type == rail::kRailNotifyWindowAntiAddiction) {
-                    anti_addiction_json_content = (char *)event->json_content.c_str();
+                    anti_addiction = event->json_content;
+                    antiAddictionReceived = true;
                 }
                 break;
             }
@@ -129,6 +139,7 @@ bool __stdcall init(LPCSTR path, int id, bool debug, bool no_anti_addiction) {
         invoker->RailFactory()->RailFloatingWindow()->SetNotifyWindowEnable(rail::kRailNotifyWindowAntiAddiction, false);
     }
     railAchievement = new RailAchievement();
+    printf("[rail_wrapper] init success! anti_addiction is %s\n", no_anti_addiction ? "OFF" : "ON");
     return ret;
 }
 
@@ -178,7 +189,5 @@ bool __stdcall progress(LPCSTR name, int cur, int max) {
 
 char *__stdcall anti_addiction() {
     if (!railAchievement) return nullptr;
-    char *json = railAchievement->anti_addiction_json_content;
-    railAchievement->anti_addiction_json_content = nullptr;
-    return json;
+    return (char *)railAchievement->FetchAntiAddiction();
 }
